@@ -6925,7 +6925,17 @@ class GitManager {
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['commit', '-m', `[자동] ${targetLang} 번역 업데이트`]);
     }
     async pushToSourceBranch(sourceBranch) {
-        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['push', 'origin', `HEAD:${sourceBranch}`]);
+        try {
+            // 원격 저장소의 최신 정보를 가져옵니다
+            await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin']);
+            // 원격의 변경사항을 현재 브랜치에 적용합니다
+            await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['pull', 'origin', sourceBranch]);
+            // 변경사항을 푸시합니다
+            await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['push', 'origin', `HEAD:${sourceBranch}`]);
+        }
+        catch (error) {
+            throw new Error(`브랜치 푸시 중 오류 발생: ${error}`);
+        }
     }
 }
 
