@@ -49,8 +49,8 @@ async function run() {
     ? JSON.parse(fs.readFileSync(targetFile, 'utf8'))
     : {}
 
-  info(`sourceContent: ${sourceContent}`)
-  info(`targetContent: ${targetContent}`)
+  console.log(`sourceContent: ${JSON.stringify(sourceContent, null, 2)}`)
+  console.log(`targetContent: ${JSON.stringify(targetContent, null, 2)}`)
 
   // 번역 실행
   const translatedContent = await bot.translate(sourceContent, targetContent)
