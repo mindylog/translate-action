@@ -44,10 +44,10 @@ async function run() {
   if (!fs.existsSync(sourceFile)) {
     throw new Error(`소스 파일을 찾을 수 없습니다: ${sourceFile}`)
   }
-  const sourceContent = JSON.parse(fs.readFileSync(sourceFile, 'utf8'))
+  const sourceContent = fs.readFileSync(sourceFile, 'utf8')
   const targetContent = fs.existsSync(targetFile)
-    ? JSON.parse(fs.readFileSync(targetFile, 'utf8'))
-    : {}
+    ? fs.readFileSync(targetFile, 'utf8')
+    : '{}'
 
   info(`sourceContent: ${JSON.stringify(sourceContent, null, 2)}`)
   info(`targetContent: ${JSON.stringify(targetContent, null, 2)}`)

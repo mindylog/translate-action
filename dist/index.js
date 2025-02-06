@@ -6791,10 +6791,10 @@ async function run() {
     if (!fs__WEBPACK_IMPORTED_MODULE_2__.existsSync(sourceFile)) {
         throw new Error(`소스 파일을 찾을 수 없습니다: ${sourceFile}`);
     }
-    const sourceContent = JSON.parse(fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync(sourceFile, 'utf8'));
+    const sourceContent = fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync(sourceFile, 'utf8');
     const targetContent = fs__WEBPACK_IMPORTED_MODULE_2__.existsSync(targetFile)
-        ? JSON.parse(fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync(targetFile, 'utf8'))
-        : {};
+        ? fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync(targetFile, 'utf8')
+        : '{}';
     (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.info)(`sourceContent: ${JSON.stringify(sourceContent, null, 2)}`);
     (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.info)(`targetContent: ${JSON.stringify(targetContent, null, 2)}`);
     // 번역 실행
