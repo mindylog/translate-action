@@ -85,25 +85,25 @@ export class Bot {
   }
 
   async translate(sourceJson: string, targetJson: string): Promise<string> {
+    const parsedSourceJson = JSON.parse(sourceJson)
+    const parsedTargetJson = JSON.parse(targetJson)
+
+    const flattenedSource = this.flattenJson(parsedSourceJson)
+    const flattenedTarget = this.flattenJson(parsedTargetJson)
+
+    // 번역이 필요한 항목만 필터링
+    const needTranslation = Object.entries(flattenedSource)
+      .filter(([key, _]) => !flattenedTarget[key])
+      .map(([key, value]) => `${key}: ${value}`)
+      .join('\n')
+
+    // 번역이 필요한 항목이 없으면 원본 반환
+    if (!needTranslation) {
+      return targetJson
+    }
+
     return pRetry(
       async () => {
-        const parsedSourceJson = JSON.parse(sourceJson)
-        const parsedTargetJson = JSON.parse(targetJson)
-
-        const flattenedSource = this.flattenJson(parsedSourceJson)
-        const flattenedTarget = this.flattenJson(parsedTargetJson)
-
-        // 번역이 필요한 항목만 필터링
-        const needTranslation = Object.entries(flattenedSource)
-          .filter(([key, _]) => !flattenedTarget[key])
-          .map(([key, value]) => `${key}: ${value}`)
-          .join('\n')
-
-        // 번역이 필요한 항목이 없으면 원본 반환
-        if (!needTranslation) {
-          return targetJson
-        }
-
         const response = await this.openAI.chat.completions.create({
           temperature: this.openAIOptions.temperature,
           max_tokens: this.openAIOptions.maxTokens,
