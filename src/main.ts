@@ -49,7 +49,7 @@ async function run() {
     ? JSON.parse(fs.readFileSync(targetFile, 'utf8'))
     : {}
 
-  console.log(`sourceContent: ${JSON.stringify(sourceContent, null, 2)}`)
+  throw Error(`sourceContent: ${JSON.stringify(sourceContent, null, 2)}`)
   console.log(`targetContent: ${JSON.stringify(targetContent, null, 2)}`)
 
   // 번역 실행
