@@ -17,6 +17,7 @@
     "password_length": "비밀번호는 최소 8자 이상이어야 합니다"
   },
   "test": {
-    "title": "테스트"
+    "title": "테스트",
+    "description": "테스트 설명"
   }
 }
