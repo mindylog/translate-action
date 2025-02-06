@@ -33,6 +33,16 @@ inputs:
     required: false
     default: 'gpt-4'
 
+  git-user-name:
+    description: 'Git user name'
+    required: false
+    default: 'GitHub Action'
+
+  git-user-email:
+    description: 'Git user email'
+    required: false
+    default: 'action@github.com'
+
 runs:
   using: 'node20'
   main: 'dist/index.js'

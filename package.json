@@ -4,8 +4,14 @@
   "description": "OpenAI-based Translator",
   "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "build": "tsc",
+    "package": "ncc build --license licenses.txt",
+    "act": "npm run build && npm run package && ./bin/act pull_request_target --secret-file .secrets",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest",
+    "all": "npm run build && npm run format && npm run lint && npm run package && npm test"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +28,7 @@
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
+    "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
     "@octokit/action": "^7.0.0",
     "@octokit/core": "^6.1.3",

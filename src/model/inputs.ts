@@ -4,6 +4,8 @@ export class Inputs {
   targetLang: string
   systemMessage: string
   model: string
+  gitUserName: string
+  gitUserEmail: string
 
   constructor(inputs: Inputs) {
     this.translationsDir = inputs.translationsDir
@@ -11,5 +13,7 @@ export class Inputs {
     this.targetLang = inputs.targetLang
     this.systemMessage = inputs.systemMessage
     this.model = inputs.model
+    this.gitUserName = inputs.gitUserName
+    this.gitUserEmail = inputs.gitUserEmail
   }
 }

@@ -4,6 +4,7 @@ import {Bot} from './client/bot'
 import {Inputs} from './model/inputs'
 import * as fs from 'fs'
 import * as path from 'path'
+import {GitManager} from './utils/git-manager'
 
 async function run() {
   const inputs = new Inputs({
@@ -11,7 +12,9 @@ async function run() {
     systemMessage: getInput('system-message'),
     sourceLang: getInput('source-lang'),
     targetLang: getInput('target-lang'),
-    model: getInput('model')
+    model: getInput('model'),
+    gitUserName: getInput('git-user-name'),
+    gitUserEmail: getInput('git-user-email')
   })
 
   const options = new Options({
@@ -55,6 +58,14 @@ async function run() {
     JSON.stringify(translatedContent, null, 2),
     'utf8'
   )
+
+  // Git 커밋 및 푸시
+  const gitManager = new GitManager(
+    targetFile,
+    inputs.gitUserName,
+    inputs.gitUserEmail
+  )
+  await gitManager.commitAndPush(inputs.targetLang)
 }
 
 process
