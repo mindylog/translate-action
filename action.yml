@@ -1,5 +1,9 @@
 name: 'Translate Action'
 description: 'Translates JSON files using OpenAI'
+branding:
+  icon: 'translate-action'
+  color: 'blue'
+author: 'Mindy Team'
 
 inputs:
   translations-dir:
@@ -43,10 +47,16 @@ inputs:
     required: false
     default: 'action@github.com'
 
+  temperature:
+    description: 'Temperature for translation'
+    required: false
+    default: 0.5
+
+  max-tokens:
+    description: 'Max tokens for translation'
+    required: false
+    default: 1000
+
 runs:
   using: 'node20'
   main: 'dist/index.js'
-
-branding:
-  icon: 'globe'
-  color: 'blue'
