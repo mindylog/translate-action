@@ -1,0 +1,42 @@
+name: 'Translate Action'
+description: 'Translates JSON files using OpenAI'
+
+inputs:
+  translations-dir:
+    description: 'Directory containing translation JSON files'
+    required: true
+    default: 'assets/translations'
+
+  source-lang:
+    description: 'Source language code (e.g., ko)'
+    required: true
+    default: 'ko'
+
+  target-lang:
+    description: 'Target language code (e.g., en)'
+    required: true
+
+  system-message:
+    description: 'System message for translation'
+    required: false
+    default:
+      'You are `@translator` (aka `github-actions[bot]`), a language model
+      trained by OpenAI. Your purpose is act as a professional translator and
+      translate the given JSON file from the source language to the target
+      language. As a professional translator, you should be able to translate
+      the given JSON file from the source language to the target language
+      accurately and fluently. You should also be able to maintain the original
+      structure and formatting of the JSON file.'
+
+  model:
+    description: 'OpenAI model to use for translation'
+    required: false
+    default: 'gpt-4'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'globe'
+  color: 'blue'
