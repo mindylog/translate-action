@@ -6909,6 +6909,7 @@ class GitManager {
                 throw new Error('PR의 소스 브랜치를 찾을 수 없습니다');
             }
             await this.configureGit();
+            await this.checkoutSourceBranch(sourceBranch);
             await this.commitChanges(targetLang);
             await this.pushToSourceBranch(sourceBranch);
         }
@@ -6920,17 +6921,16 @@ class GitManager {
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['config', '--global', 'user.name', this.username]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['config', '--global', 'user.email', this.email]);
     }
+    async checkoutSourceBranch(sourceBranch) {
+        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin']);
+        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['checkout', sourceBranch]);
+    }
     async commitChanges(targetLang) {
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['add', this.targetFile]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['commit', '-m', `[자동] ${targetLang} 번역 업데이트`]);
     }
     async pushToSourceBranch(sourceBranch) {
         try {
-            // 원격 저장소의 최신 정보를 가져옵니다
-            await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin']);
-            // 원격의 변경사항을 현재 브랜치에 적용합니다
-            await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['pull', 'origin', sourceBranch]);
-            // 변경사항을 푸시합니다
             await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['push', 'origin', `HEAD:${sourceBranch}`]);
         }
         catch (error) {
