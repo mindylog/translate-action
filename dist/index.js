@@ -6599,7 +6599,10 @@ async function pRetry(input, options) {
 	});
 }
 
+// EXTERNAL MODULE: ./node_modules/.pnpm/@actions+core@1.11.1/node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(9999);
 ;// CONCATENATED MODULE: ./lib/client/bot.js
+
 
 
 
@@ -6663,21 +6666,21 @@ class Bot {
         }
     }
     async translate(sourceJson, targetJson) {
+        const parsedSourceJson = JSON.parse(sourceJson);
+        const parsedTargetJson = JSON.parse(targetJson);
+        const flattenedSource = this.flattenJson(parsedSourceJson);
+        const flattenedTarget = this.flattenJson(parsedTargetJson);
+        // 번역이 필요한 항목만 필터링
+        const needTranslation = Object.entries(flattenedSource)
+            .filter(([key, _]) => !flattenedTarget[key])
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
+        // 번역이 필요한 항목이 없으면 원본 반환
+        if (!needTranslation) {
+            return targetJson;
+        }
         return pRetry(async () => {
-            const parsedSourceJson = JSON.parse(sourceJson);
-            const parsedTargetJson = JSON.parse(targetJson);
-            const flattenedSource = this.flattenJson(parsedSourceJson);
-            const flattenedTarget = this.flattenJson(parsedTargetJson);
-            // 번역이 필요한 항목만 필터링
-            const needTranslation = Object.entries(flattenedSource)
-                .filter(([key, _]) => !flattenedTarget[key])
-                .map(([key, value]) => `${key}: ${value}`)
-                .join('\n');
-            // 번역이 필요한 항목이 없으면 원본 반환
-            if (!needTranslation) {
-                return targetJson;
-            }
-            const response = await this.openAI.chat.completions.create({
+            const completion = await this.openAI.chat.completions.create({
                 temperature: this.openAIOptions.temperature,
                 max_tokens: this.openAIOptions.maxTokens,
                 messages: [
@@ -6713,7 +6716,8 @@ class Bot {
                 model: this.openAIOptions.model
             });
             // 번역 결과 처리
-            const translatedText = response.choices[0].message?.content?.trim() ?? '';
+            const translatedText = completion.choices[0].message?.content?.trim() ?? '';
+            (0,core.info)(`translatedText: ${translatedText}`);
             const translatedPairs = this.parseTranslatedText(translatedText);
             // 기존 타겟 JSON과 번역된 값 병합
             const mergedFlattened = {
@@ -6791,6 +6795,8 @@ async function run() {
     const targetContent = fs__WEBPACK_IMPORTED_MODULE_2__.existsSync(targetFile)
         ? JSON.parse(fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync(targetFile, 'utf8'))
         : {};
+    (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.info)(`sourceContent: ${JSON.stringify(sourceContent, null, 2)}`);
+    (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.info)(`targetContent: ${JSON.stringify(targetContent, null, 2)}`);
     // 번역 실행
     const translatedContent = await bot.translate(sourceContent, targetContent);
     // 번역된 내용 저장
