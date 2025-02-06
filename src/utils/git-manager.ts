@@ -16,6 +16,7 @@ export class GitManager {
       }
 
       await this.configureGit()
+      await this.checkoutSourceBranch(sourceBranch)
       await this.commitChanges(targetLang)
       await this.pushToSourceBranch(sourceBranch)
     } catch (error) {
@@ -28,6 +29,11 @@ export class GitManager {
     await exec('git', ['config', '--global', 'user.email', this.email])
   }
 
+  private async checkoutSourceBranch(sourceBranch: string): Promise<void> {
+    await exec('git', ['fetch', 'origin'])
+    await exec('git', ['checkout', sourceBranch])
+  }
+
   private async commitChanges(targetLang: string): Promise<void> {
     await exec('git', ['add', this.targetFile])
     await exec('git', ['commit', '-m', `[자동] ${targetLang} 번역 업데이트`])
@@ -35,11 +41,6 @@ export class GitManager {
 
   private async pushToSourceBranch(sourceBranch: string): Promise<void> {
     try {
-      // 원격 저장소의 최신 정보를 가져옵니다
-      await exec('git', ['fetch', 'origin'])
-      // 원격의 변경사항을 현재 브랜치에 적용합니다
-      await exec('git', ['pull', 'origin', sourceBranch])
-      // 변경사항을 푸시합니다
       await exec('git', ['push', 'origin', `HEAD:${sourceBranch}`])
     } catch (error) {
       throw new Error(`브랜치 푸시 중 오류 발생: ${error}`)
