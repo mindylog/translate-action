@@ -2,7 +2,7 @@
   "name": "@mindylog/translate-action",
   "version": "1.0.0",
   "description": "OpenAI-based Translator",
-  "main": "lib/index.js",
+  "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
     "package": "ncc build --license licenses.txt",
