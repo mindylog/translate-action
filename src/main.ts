@@ -49,10 +49,10 @@ async function run() {
     ? JSON.parse(fs.readFileSync(targetFile, 'utf8'))
     : {}
 
-  console.log('=== Source Content ===')
-  console.log(JSON.stringify(sourceContent, null, 2))
-  console.log('=== Target Content ===')
-  console.log(JSON.stringify(targetContent, null, 2))
+  warning('=== Source Content ===')
+  warning(JSON.stringify(sourceContent, null, 2))
+  warning('=== Target Content ===')
+  warning(JSON.stringify(targetContent, null, 2))
 
   // 번역 실행
   const translatedContent = await bot.translate(sourceContent, targetContent)
@@ -73,12 +73,12 @@ async function run() {
   await gitManager.commitAndPush(inputs.targetLang)
 }
 
-// process
-//   .on('unhandledRejection', (reason, p) => {
-//     warning(`Unhandled Rejection at Promise: ${reason}, promise is ${p}`)
-//   })
-//   .on('uncaughtException', (e: any) => {
-//     warning(`Uncaught Exception thrown: ${e}, backtrace: ${e.stack}`)
-//   })
+process
+  .on('unhandledRejection', (reason, p) => {
+    warning(`Unhandled Rejection at Promise: ${reason}, promise is ${p}`)
+  })
+  .on('uncaughtException', (e: any) => {
+    warning(`Uncaught Exception thrown: ${e}, backtrace: ${e.stack}`)
+  })
 
 await run()
