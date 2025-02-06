@@ -1,7 +1,11 @@
 name: Test Translation Action
 
+permissions:
+  contents: write
+
 on:
-  workflow_dispatch:
+  pull_request:
+    branches: [main]
 
 jobs:
   translate:
@@ -14,6 +18,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
         with:
           translations-dir: 'test/translations'
           source-lang: 'ko'
