@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import {OpenAIOptions, Options} from '../model/options'
 import dedent from 'dedent'
 import pRetry from 'p-retry'
+import {info} from '@actions/core'
 
 export class Bot {
   private readonly openAI: OpenAI
@@ -104,7 +105,7 @@ export class Bot {
 
     return pRetry(
       async () => {
-        const response = await this.openAI.chat.completions.create({
+        const completion = await this.openAI.chat.completions.create({
           temperature: this.openAIOptions.temperature,
           max_tokens: this.openAIOptions.maxTokens,
           messages: [
@@ -141,7 +142,8 @@ export class Bot {
         })
         // 번역 결과 처리
         const translatedText =
-          response.choices[0].message?.content?.trim() ?? ''
+          completion.choices[0].message?.content?.trim() ?? ''
+        info(`translatedText: ${translatedText}`)
         const translatedPairs = this.parseTranslatedText(translatedText)
 
         // 기존 타겟 JSON과 번역된 값 병합
