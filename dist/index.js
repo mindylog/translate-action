@@ -6677,7 +6677,7 @@ class Bot {
             .join('\n');
         // 번역이 필요한 항목이 없으면 원본 반환
         if (!needTranslation) {
-            return targetJson;
+            return parsedTargetJson;
         }
         return pRetry(async () => {
             const completion = await this.openAI.chat.completions.create({
@@ -6728,7 +6728,7 @@ class Bot {
             const result = this.unflattenJson(mergedFlattened);
             // 번역 결과 검증
             this.validateTranslation(flattenedSource, result);
-            return JSON.stringify(result, null, 2);
+            return result;
         }, {
             retries: 3,
             onFailedAttempt: error => {

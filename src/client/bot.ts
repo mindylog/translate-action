@@ -85,7 +85,10 @@ export class Bot {
     }
   }
 
-  async translate(sourceJson: string, targetJson: string): Promise<string> {
+  async translate(
+    sourceJson: string,
+    targetJson: string
+  ): Promise<Record<string, any>> {
     const parsedSourceJson = JSON.parse(sourceJson)
     const parsedTargetJson = JSON.parse(targetJson)
 
@@ -100,7 +103,7 @@ export class Bot {
 
     // 번역이 필요한 항목이 없으면 원본 반환
     if (!needTranslation) {
-      return targetJson
+      return parsedTargetJson
     }
 
     return pRetry(
@@ -158,7 +161,7 @@ export class Bot {
         // 번역 결과 검증
         this.validateTranslation(flattenedSource, result)
 
-        return JSON.stringify(result, null, 2)
+        return result
       },
       {
         retries: 3,
