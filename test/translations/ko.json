@@ -1,0 +1,19 @@
+{
+  "common": {
+    "hello": "안녕하세요",
+    "welcome": "환영합니다",
+    "goodbye": "안녕히 가세요"
+  },
+  "auth": {
+    "login": "로그인",
+    "signup": "회원가입",
+    "logout": "로그아웃",
+    "email": "이메일",
+    "password": "비밀번호"
+  },
+  "errors": {
+    "required": "필수 항목입니다",
+    "invalid_email": "올바른 이메일 형식이 아닙니다",
+    "password_length": "비밀번호는 최소 8자 이상이어야 합니다"
+  }
+}
