@@ -6726,8 +6726,12 @@ class Bot {
                 ...flattenedTarget,
                 ...translatedPairs
             };
+            // 소스에 존재하는 키만 필터링
+            const filteredMergedFlattened = Object.entries(mergedFlattened)
+                .filter(([key]) => key in flattenedSource)
+                .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
             // 최종 결과를 중첩된 JSON 구조로 변환
-            const result = this.unflattenJson(mergedFlattened);
+            const result = this.unflattenJson(filteredMergedFlattened);
             parsedTargetJson = result;
             // 번역 결과 검증
             this.validateTranslation(flattenedSource, result);
