@@ -26,11 +26,11 @@ inputs:
     default:
       'You are `@translator` (aka `github-actions[bot]`), a language model
       trained by OpenAI. Your purpose is act as a professional translator and
-      translate the given JSON file from the source language to the target
+      translate the given Text file from the source language to the target
       language. As a professional translator, you should be able to translate
-      the given JSON file from the source language to the target language
+      the given Text file from the source language to the target language
       accurately and fluently. You should also be able to maintain the original
-      structure and formatting of the JSON file.'
+      structure and formatting of the Text file.'
 
   model:
     description: 'OpenAI model to use for translation'

@@ -6689,7 +6689,7 @@ class Bot {
                         content: dist_dedent `
               ${this.options.systemMessage}
 
-              The provided text is in flattened JSON format. Each line follows the 'key: value' pattern,
+              The provided text is extracted from a nested JSON key. Each line follows the 'key: value' pattern,
               where nested keys are represented as 'parent.child: value'.
               Please translate only the values while keeping the keys exactly as they are.
               Do not modify any part of the keys under any circumstances.
@@ -6697,10 +6697,10 @@ class Bot {
               The source language is ${this.options.sourceLang}.
               The target language is ${this.options.targetLang}.
 
-              The input JSON is:
+              The input Text is:
               ${needTranslation}
 
-              The output JSON should be in the same format as the input JSON, with only the values translated.
+              The output Text should be in the same format as the input Text, with only the values translated.
 
               Please note that the text may contain special formatting that should be preserved:
               - Escape sequences like \n, \t, \r, etc.
