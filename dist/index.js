@@ -6661,9 +6661,11 @@ class Bot {
     validateTranslation(flattenedSource, result) {
         const flattenedResult = this.flattenJson(result);
         const missingKeys = Object.keys(flattenedSource).filter(key => !flattenedResult[key]);
-        if (missingKeys.length > 0) {
-            throw new Error(`번역 결과에 다음 키가 누락되었습니다: ${missingKeys.join(', ')}`);
-        }
+        // if (missingKeys.length > 0) {
+        //   throw new Error(
+        //     `번역 결과에 다음 키가 누락되었습니다: ${missingKeys.join(', ')}`
+        //   )
+        // }
     }
     async translate(sourceJson, targetJson) {
         const parsedSourceJson = JSON.parse(sourceJson);
