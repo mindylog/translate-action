@@ -138,7 +138,8 @@ export class Bot {
               - Any other special syntax used by the translation system
 
               Please translate only the actual text content while keeping all special formatting intact.
-              Output should be in the same format as the input Text. Please do not add any additional text or formatting like markdown or HTML, JSON.
+              
+              Important: Output should be in the same format as the input Text. Please do not add any additional text or formatting like markdown or HTML, JSON.
               `
             }
           ],
