@@ -1,4 +1,4 @@
-import {getInput, info, warning} from '@actions/core'
+import {getInput, warning} from '@actions/core'
 import {OpenAIOptions, Options} from './model/options'
 import {Bot} from './client/bot'
 import {Inputs} from './model/inputs'
@@ -49,8 +49,6 @@ async function run() {
     ? fs.readFileSync(targetFile, 'utf8')
     : '{}'
 
-  info(`sourceContent: ${JSON.stringify(sourceContent, null, 2)}`)
-  info(`targetContent: ${JSON.stringify(targetContent, null, 2)}`)
   // 번역 실행
   const translatedContent = await bot.translate(sourceContent, targetContent)
 

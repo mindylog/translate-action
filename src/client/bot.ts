@@ -75,14 +75,14 @@ export class Bot {
   ): void {
     const flattenedResult = this.flattenJson(result)
     const missingKeys = Object.keys(flattenedSource).filter(
-      key => !flattenedResult[key]
+      key => flattenedResult[key] !== '' && !flattenedResult[key]
     )
 
-    // if (missingKeys.length > 0) {
-    //   throw new Error(
-    //     `번역 결과에 다음 키가 누락되었습니다: ${missingKeys.join(', ')}`
-    //   )
-    // }
+    if (missingKeys.length > 0) {
+      throw new Error(
+        `번역 결과에 다음 키가 누락되었습니다: ${missingKeys.join(', ')}`
+      )
+    }
   }
 
   async translate(
@@ -90,24 +90,24 @@ export class Bot {
     targetJson: string
   ): Promise<Record<string, any>> {
     const parsedSourceJson = JSON.parse(sourceJson)
-    const parsedTargetJson = JSON.parse(targetJson)
-
-    const flattenedSource = this.flattenJson(parsedSourceJson)
-    const flattenedTarget = this.flattenJson(parsedTargetJson)
-
-    // 번역이 필요한 항목만 필터링
-    const needTranslation = Object.entries(flattenedSource)
-      .filter(([key, _]) => !flattenedTarget[key])
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\n')
-
-    // 번역이 필요한 항목이 없으면 원본 반환
-    if (!needTranslation) {
-      return parsedTargetJson
-    }
+    let parsedTargetJson = JSON.parse(targetJson)
 
     return pRetry(
       async () => {
+        const flattenedSource = this.flattenJson(parsedSourceJson)
+        const flattenedTarget = this.flattenJson(parsedTargetJson)
+
+        // 번역이 필요한 항목만 필터링
+        const needTranslation = Object.entries(flattenedSource)
+          .filter(([key, _]) => !flattenedTarget[key])
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n')
+
+        // 번역이 필요한 항목이 없으면 원본 반환
+        if (!needTranslation) {
+          return parsedTargetJson
+        }
+
         const completion = await this.openAI.chat.completions.create({
           temperature: this.openAIOptions.temperature,
           max_tokens: this.openAIOptions.maxTokens,
@@ -159,6 +159,7 @@ export class Bot {
 
         // 최종 결과를 중첩된 JSON 구조로 변환
         const result = this.unflattenJson(mergedFlattened)
+        parsedTargetJson = result
 
         // 번역 결과 검증
         this.validateTranslation(flattenedSource, result)
