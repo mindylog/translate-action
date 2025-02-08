@@ -14,7 +14,7 @@
   "errors": {
     "required": "This field is required",
     "invalid_email": "This is not a valid email format",
-    "password_length": "Password must be at least 8 characters long"
+    "password_length": "Password must be at least 8 characters long, including special characters"
   },
   "test": {
     "title": "Test",
