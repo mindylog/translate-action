@@ -6697,9 +6697,6 @@ class Bot {
               The source language is ${this.options.sourceLang}.
               The target language is ${this.options.targetLang}.
 
-              The input Text is:
-              ${needTranslation}
-
               The output Text should be in the same format as the input Text, with only the values translated.
 
               Please note that the text may contain special formatting that should be preserved:
@@ -6707,12 +6704,18 @@ class Bot {
               - Text styling with markdown or HTML tags
               - Variable references like {name}, {}
               - Translation references like @:common.title
+              - XML tags like <hl>text</hl>
               - Any other special syntax used by the translation system
 
               Please translate only the actual text content while keeping all special formatting intact.
               
               Important: Output should be in the same format as the input Text. Please do not add any additional text or formatting like markdown or HTML, JSON.
+              Important: XML tags should be closed.
               `
+                    },
+                    {
+                        role: 'user',
+                        content: needTranslation
                     }
                 ],
                 model: this.openAIOptions.model
