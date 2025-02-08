@@ -40,7 +40,7 @@ export class Bot {
     return text.split('\n').reduce(
       (acc, line) => {
         const [key, ...values] = line.split(':')
-        acc[key.trim()] = values.join(':').trim()
+        acc[key.trim()] = values.join(':').trim().replaceAll('[newline]', '\n')
         return acc
       },
       {} as Record<string, string>
@@ -100,8 +100,10 @@ export class Bot {
         // 번역이 필요한 항목만 필터링
         const needTranslation = Object.entries(flattenedSource)
           .filter(([key, _]) => !flattenedTarget[key])
-          .map(([key, value]) => `${key}: ${value}`)
-          .join('\n')
+          .map(
+            ([key, value]) => `${key}: ${value.replaceAll('\n', '[newline]')}`
+          )
+          .join('')
 
         // 번역이 필요한 항목이 없으면 원본 반환
         if (!needTranslation) {
@@ -129,6 +131,7 @@ export class Bot {
 
               Please note that the text may contain special formatting that should be preserved:
               - Escape sequences like \n, \t, \r, etc.
+              - Newline characters should be preserved as [newline]
               - Text styling with markdown or HTML tags
               - Variable references like {name}, {}
               - Translation references like @:common.title
