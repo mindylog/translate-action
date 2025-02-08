@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       # 번역 액션 실행
       - name: Run translation action
         uses: ./ # 현재 레포지토리의 액션을 사용
