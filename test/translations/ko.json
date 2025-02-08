@@ -14,7 +14,7 @@
   "errors": {
     "required": "필수 항목입니다",
     "invalid_email": "올바른 이메일 형식이 아닙니다",
-    "password_length": "비밀번호는 최소 8자 이상이어야 합니다"
+    "password_length": "비밀번호는 특수문자를 포함한 최소 8자 이상이어야 합니다"
   },
   "test": {
     "title": "테스트",
