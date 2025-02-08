@@ -37,7 +37,7 @@ export class Bot {
   }
 
   private parseTranslatedText(text: string): Record<string, string> {
-    return text.split('%%n').reduce(
+    return text.split('%%').reduce(
       (acc, line) => {
         const [key, ...values] = line.split(':')
         acc[key.trim()] = values.join(':').trim()
