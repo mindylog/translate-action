@@ -6957,7 +6957,7 @@ class GitManager {
             // HEAD^ 는 현재 커밋의 이전 커밋을 의미합니다
             const result = await this.execWithOutput('git', [
                 'show',
-                `HEAD^:${filePath}`
+                `HEAD~:${filePath}`
             ]);
             return result.stdout;
         }
