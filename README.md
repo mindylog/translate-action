@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 2
       # 번역 액션 실행
       - name: Run translation action
-        uses: ./ # 현재 레포지토리의 액션을 사용
+        uses: mindylog/translate-action@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -41,6 +41,46 @@ jobs:
           translations-dir: 'test/translations'
           source-lang: 'ko'
           target-lang: 'en'
+          model: 'gpt-4o'
+          git-user-name: 'github-actions[bot]'
+          git-user-email: 'github-actions[bot]@users.noreply.github.com'
+          temperature: 0.7
+          max-tokens: 2000
+```
+
+만약 복수개의 locale에 대해 번역을 진행하고 싶다면 다음과 같이 설정하세요:
+
+```yaml
+name: Test Translation Action
+
+permissions:
+  contents: write
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        locale: [ko, en, ja]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      # 번역 액션 실행
+      - name: Run translation action
+        uses: mindylog/translate-action@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+        with:
+          translations-dir: 'test/translations'
+          source-lang: 'ko'
+          target-lang: ${{ matrix.locale }}
           model: 'gpt-4o'
           git-user-name: 'github-actions[bot]'
           git-user-email: 'github-actions[bot]@users.noreply.github.com'
