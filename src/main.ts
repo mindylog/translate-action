@@ -30,7 +30,7 @@ async function run() {
   })
 
   const bot = new Bot(options, openAIOptions)
-
+  const gitManager = new GitManager(inputs.gitUserName, inputs.gitUserEmail)
   // 번역할 파일 읽기
   const sourceFile = path.join(
     inputs.translationsDir,
@@ -44,13 +44,19 @@ async function run() {
   if (!fs.existsSync(sourceFile)) {
     throw new Error(`소스 파일을 찾을 수 없습니다: ${sourceFile}`)
   }
+  const previousSourceContent =
+    await gitManager.getPreviousFileContent(sourceFile)
   const sourceContent = fs.readFileSync(sourceFile, 'utf8')
   const targetContent = fs.existsSync(targetFile)
     ? fs.readFileSync(targetFile, 'utf8')
     : '{}'
 
   // 번역 실행
-  const translatedContent = await bot.translate(sourceContent, targetContent)
+  const translatedContent = await bot.translate(
+    sourceContent,
+    targetContent,
+    previousSourceContent
+  )
 
   // 번역된 내용 저장
   fs.writeFileSync(
@@ -59,13 +65,7 @@ async function run() {
     'utf8'
   )
 
-  // Git 커밋 및 푸시
-  const gitManager = new GitManager(
-    targetFile,
-    inputs.gitUserName,
-    inputs.gitUserEmail
-  )
-  await gitManager.commitAndPush(inputs.targetLang)
+  await gitManager.commitAndPush(targetFile, inputs.targetLang)
 }
 
 process

@@ -87,7 +87,8 @@ export class Bot {
 
   async translate(
     sourceJson: string,
-    targetJson: string
+    targetJson: string,
+    previousSourceJson: string | null
   ): Promise<Record<string, any>> {
     const parsedSourceJson = JSON.parse(sourceJson)
     let parsedTargetJson = JSON.parse(targetJson)
@@ -97,9 +98,22 @@ export class Bot {
         const flattenedSource = this.flattenJson(parsedSourceJson)
         const flattenedTarget = this.flattenJson(parsedTargetJson)
 
-        // 번역이 필요한 항목만 필터링
+        // sourceJson과 previousSourceJson 비교하여 변경된 키 찾기
+        let changedKeys: Set<string> = new Set()
+        if (previousSourceJson) {
+          const parsedPreviousSource = JSON.parse(previousSourceJson)
+          const flattenedPreviousSource = this.flattenJson(parsedPreviousSource)
+
+          changedKeys = new Set(
+            Object.entries(flattenedSource)
+              .filter(([key, value]) => flattenedPreviousSource[key] !== value)
+              .map(([key]) => key)
+          )
+        }
+
+        // 번역이 필요한 항목만 필터링 (변경된 키는 무조건 포함)
         const needTranslation = Object.entries(flattenedSource)
-          .filter(([key, _]) => !flattenedTarget[key])
+          .filter(([key, _]) => !flattenedTarget[key] || changedKeys.has(key))
           .map(([key, value]) => `${key}: ${value}`)
           .join('%%')
 

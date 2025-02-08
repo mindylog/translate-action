@@ -6665,15 +6665,24 @@ class Bot {
             throw new Error(`번역 결과에 다음 키가 누락되었습니다: ${missingKeys.join(', ')}`);
         }
     }
-    async translate(sourceJson, targetJson) {
+    async translate(sourceJson, targetJson, previousSourceJson) {
         const parsedSourceJson = JSON.parse(sourceJson);
         let parsedTargetJson = JSON.parse(targetJson);
         return pRetry(async () => {
             const flattenedSource = this.flattenJson(parsedSourceJson);
             const flattenedTarget = this.flattenJson(parsedTargetJson);
-            // 번역이 필요한 항목만 필터링
+            // sourceJson과 previousSourceJson 비교하여 변경된 키 찾기
+            let changedKeys = new Set();
+            if (previousSourceJson) {
+                const parsedPreviousSource = JSON.parse(previousSourceJson);
+                const flattenedPreviousSource = this.flattenJson(parsedPreviousSource);
+                changedKeys = new Set(Object.entries(flattenedSource)
+                    .filter(([key, value]) => flattenedPreviousSource[key] !== value)
+                    .map(([key]) => key));
+            }
+            // 번역이 필요한 항목만 필터링 (변경된 키는 무조건 포함)
             const needTranslation = Object.entries(flattenedSource)
-                .filter(([key, _]) => !flattenedTarget[key])
+                .filter(([key, _]) => !flattenedTarget[key] || changedKeys.has(key))
                 .map(([key, value]) => `${key}: ${value}`)
                 .join('%%');
             // 번역이 필요한 항목이 없으면 원본 반환
@@ -6795,23 +6804,23 @@ async function run() {
         maxTokens: Number((0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('max-tokens'))
     });
     const bot = new _client_bot__WEBPACK_IMPORTED_MODULE_1__/* .Bot */ .c(options, openAIOptions);
+    const gitManager = new _utils_git_manager__WEBPACK_IMPORTED_MODULE_4__/* .GitManager */ .Y(inputs.gitUserName, inputs.gitUserEmail);
     // 번역할 파일 읽기
     const sourceFile = path__WEBPACK_IMPORTED_MODULE_3__.join(inputs.translationsDir, `${inputs.sourceLang}.json`);
     const targetFile = path__WEBPACK_IMPORTED_MODULE_3__.join(inputs.translationsDir, `${inputs.targetLang}.json`);
     if (!fs__WEBPACK_IMPORTED_MODULE_2__.existsSync(sourceFile)) {
         throw new Error(`소스 파일을 찾을 수 없습니다: ${sourceFile}`);
     }
+    const previousSourceContent = await gitManager.getPreviousFileContent(sourceFile);
     const sourceContent = fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync(sourceFile, 'utf8');
     const targetContent = fs__WEBPACK_IMPORTED_MODULE_2__.existsSync(targetFile)
         ? fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync(targetFile, 'utf8')
         : '{}';
     // 번역 실행
-    const translatedContent = await bot.translate(sourceContent, targetContent);
+    const translatedContent = await bot.translate(sourceContent, targetContent, previousSourceContent);
     // 번역된 내용 저장
     fs__WEBPACK_IMPORTED_MODULE_2__.writeFileSync(targetFile, JSON.stringify(translatedContent, null, 2), 'utf8');
-    // Git 커밋 및 푸시
-    const gitManager = new _utils_git_manager__WEBPACK_IMPORTED_MODULE_4__/* .GitManager */ .Y(targetFile, inputs.gitUserName, inputs.gitUserEmail);
-    await gitManager.commitAndPush(inputs.targetLang);
+    await gitManager.commitAndPush(targetFile, inputs.targetLang);
 }
 process
     .on('unhandledRejection', (reason, p) => {
@@ -6902,15 +6911,13 @@ class OpenAIOptions {
 
 
 class GitManager {
-    targetFile;
     username;
     email;
-    constructor(targetFile, username = 'GitHub Action', email = 'action@github.com') {
-        this.targetFile = targetFile;
+    constructor(username = 'GitHub Action', email = 'action@github.com') {
         this.username = username;
         this.email = email;
     }
-    async commitAndPush(targetLang) {
+    async commitAndPush(targetFile, targetLang) {
         try {
             const sourceBranch = process.env.GITHUB_HEAD_REF;
             if (!sourceBranch) {
@@ -6918,7 +6925,7 @@ class GitManager {
             }
             await this.configureGit();
             await this.checkoutSourceBranch(sourceBranch);
-            await this.commitChanges(targetLang);
+            await this.commitChanges(targetFile, targetLang);
             await this.pushToSourceBranch(sourceBranch);
         }
         catch (error) {
@@ -6933,8 +6940,8 @@ class GitManager {
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin']);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['checkout', sourceBranch]);
     }
-    async commitChanges(targetLang) {
-        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['add', this.targetFile]);
+    async commitChanges(targetFile, targetLang) {
+        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['add', targetFile]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['commit', '-m', `[자동] ${targetLang} 번역 업데이트`]);
     }
     async pushToSourceBranch(sourceBranch) {
@@ -6944,6 +6951,37 @@ class GitManager {
         catch (error) {
             throw new Error(`브랜치 푸시 중 오류 발생: ${error}`);
         }
+    }
+    async getPreviousFileContent(filePath) {
+        try {
+            // HEAD^ 는 현재 커밋의 이전 커밋을 의미합니다
+            const result = await this.execWithOutput('git', [
+                'show',
+                `HEAD^:${filePath}`
+            ]);
+            return result.stdout;
+        }
+        catch (error) {
+            // 파일이 이전에 존재하지 않았거나 첫 커밋인 경우
+            (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.warning)(`이전 파일 내용을 가져올 수 없습니다: ${error}`);
+            return null;
+        }
+    }
+    async execWithOutput(command, args) {
+        let stdout = '';
+        let stderr = '';
+        const options = {
+            listeners: {
+                stdout: (data) => {
+                    stdout += data.toString();
+                },
+                stderr: (data) => {
+                    stderr += data.toString();
+                }
+            }
+        };
+        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)(command, args, options);
+        return { stdout, stderr };
     }
 }
 
