@@ -1,4 +1,4 @@
-# Traslate Action
+# Translate Action
 
 마인디 앱의 번역을 책임지는 액션입니다. 기본적으로 flutter easy_localization 의
 번역 파일을 번역하도록 설계되어 있으므로 범용적인 구조가 아닐 수 있습니다.
