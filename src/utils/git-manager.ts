@@ -43,6 +43,8 @@ export class GitManager {
 
   private async pushToSourceBranch(sourceBranch: string): Promise<void> {
     try {
+      await exec('git', ['fetch', 'origin'])
+      await exec('git', ['rebase', `origin/${sourceBranch}`])
       await exec('git', ['push', 'origin', `HEAD:${sourceBranch}`])
     } catch (error) {
       throw new Error(`브랜치 푸시 중 오류 발생: ${error}`)
