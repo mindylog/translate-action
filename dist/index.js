@@ -6946,6 +6946,8 @@ class GitManager {
     }
     async pushToSourceBranch(sourceBranch) {
         try {
+            await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin']);
+            await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['rebase', `origin/${sourceBranch}`]);
             await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['push', 'origin', `HEAD:${sourceBranch}`]);
         }
         catch (error) {
