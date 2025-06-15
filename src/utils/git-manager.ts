@@ -7,6 +7,15 @@ export class GitManager {
     private readonly email: string = 'action@github.com'
   ) {}
 
+  async initWithCheckout(): Promise<void> {
+    const sourceBranch = process.env.GITHUB_HEAD_REF
+    if (!sourceBranch) {
+      throw new Error('PR의 소스 브랜치를 찾을 수 없습니다')
+    }
+    await this.configureGit()
+    await this.checkoutSourceBranch(sourceBranch)
+  }
+
   async commitAndPush(targetFile: string, targetLang: string): Promise<void> {
     try {
       const sourceBranch = process.env.GITHUB_HEAD_REF
@@ -14,8 +23,6 @@ export class GitManager {
         throw new Error('PR의 소스 브랜치를 찾을 수 없습니다')
       }
 
-      await this.configureGit()
-      await this.checkoutSourceBranch(sourceBranch)
       await this.commitChanges(targetFile, targetLang)
       await this.pushToSourceBranch(sourceBranch)
     } catch (error) {
@@ -30,9 +37,6 @@ export class GitManager {
 
   private async checkoutSourceBranch(sourceBranch: string): Promise<void> {
     await exec('git', ['fetch', 'origin'])
-    // 작업 디렉토리 초기화
-    await exec('git', ['reset', '--hard'])
-    await exec('git', ['clean', '-fd'])
     await exec('git', ['checkout', sourceBranch])
   }
 

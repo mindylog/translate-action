@@ -31,6 +31,9 @@ async function run() {
 
   const bot = new Bot(options, openAIOptions)
   const gitManager = new GitManager(inputs.gitUserName, inputs.gitUserEmail)
+
+  await gitManager.initWithCheckout()
+
   // 번역할 파일 읽기
   const sourceFile = path.join(
     inputs.translationsDir,
