@@ -6805,6 +6805,7 @@ async function run() {
     });
     const bot = new _client_bot__WEBPACK_IMPORTED_MODULE_1__/* .Bot */ .c(options, openAIOptions);
     const gitManager = new _utils_git_manager__WEBPACK_IMPORTED_MODULE_4__/* .GitManager */ .Y(inputs.gitUserName, inputs.gitUserEmail);
+    await gitManager.initWithCheckout();
     // 번역할 파일 읽기
     const sourceFile = path__WEBPACK_IMPORTED_MODULE_3__.join(inputs.translationsDir, `${inputs.sourceLang}.json`);
     const targetFile = path__WEBPACK_IMPORTED_MODULE_3__.join(inputs.translationsDir, `${inputs.targetLang}.json`);
@@ -6917,14 +6918,20 @@ class GitManager {
         this.username = username;
         this.email = email;
     }
+    async initWithCheckout() {
+        const sourceBranch = process.env.GITHUB_HEAD_REF;
+        if (!sourceBranch) {
+            throw new Error('PR의 소스 브랜치를 찾을 수 없습니다');
+        }
+        await this.configureGit();
+        await this.checkoutSourceBranch(sourceBranch);
+    }
     async commitAndPush(targetFile, targetLang) {
         try {
             const sourceBranch = process.env.GITHUB_HEAD_REF;
             if (!sourceBranch) {
                 throw new Error('PR의 소스 브랜치를 찾을 수 없습니다');
             }
-            await this.configureGit();
-            await this.checkoutSourceBranch(sourceBranch);
             await this.commitChanges(targetFile, targetLang);
             await this.pushToSourceBranch(sourceBranch);
         }
@@ -6938,9 +6945,6 @@ class GitManager {
     }
     async checkoutSourceBranch(sourceBranch) {
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin']);
-        // 작업 디렉토리 초기화
-        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['reset', '--hard']);
-        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['clean', '-fd']);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['checkout', sourceBranch]);
     }
     async commitChanges(targetFile, targetLang) {
