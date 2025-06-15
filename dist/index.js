@@ -6938,6 +6938,9 @@ class GitManager {
     }
     async checkoutSourceBranch(sourceBranch) {
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin']);
+        // 작업 디렉토리 초기화
+        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['reset', '--hard']);
+        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['clean', '-fd']);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['checkout', sourceBranch]);
     }
     async commitChanges(targetFile, targetLang) {

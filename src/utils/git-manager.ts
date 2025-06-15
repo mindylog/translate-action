@@ -30,6 +30,9 @@ export class GitManager {
 
   private async checkoutSourceBranch(sourceBranch: string): Promise<void> {
     await exec('git', ['fetch', 'origin'])
+    // 작업 디렉토리 초기화
+    await exec('git', ['reset', '--hard'])
+    await exec('git', ['clean', '-fd'])
     await exec('git', ['checkout', sourceBranch])
   }
 
