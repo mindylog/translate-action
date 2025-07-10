@@ -8173,6 +8173,7 @@ async function run() {
         sourceLang: (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('source-lang'),
         targetLang: (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('target-lang'),
         fileFormat: (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('file-format'),
+        filePrefix: (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('file-prefix'),
         model: (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('model'),
         gitUserName: (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('git-user-name'),
         gitUserEmail: (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('git-user-email')
@@ -8194,8 +8195,8 @@ async function run() {
     const fileExtension = (0,_utils_file_parser__WEBPACK_IMPORTED_MODULE_5__/* .getFileExtension */ .QC)(inputs.fileFormat);
     const fileParser = (0,_utils_file_parser__WEBPACK_IMPORTED_MODULE_5__/* .getFileParser */ ._T)(inputs.fileFormat);
     // 번역할 파일 읽기
-    const sourceFile = path__WEBPACK_IMPORTED_MODULE_3__.join(inputs.translationsDir, `${inputs.sourceLang}.${fileExtension}`);
-    const targetFile = path__WEBPACK_IMPORTED_MODULE_3__.join(inputs.translationsDir, `${inputs.targetLang}.${fileExtension}`);
+    const sourceFile = path__WEBPACK_IMPORTED_MODULE_3__.join(inputs.translationsDir, `${inputs.filePrefix}${inputs.sourceLang}.${fileExtension}`);
+    const targetFile = path__WEBPACK_IMPORTED_MODULE_3__.join(inputs.translationsDir, `${inputs.filePrefix}${inputs.targetLang}.${fileExtension}`);
     if (!fs__WEBPACK_IMPORTED_MODULE_2__.existsSync(sourceFile)) {
         throw new Error(`소스 파일을 찾을 수 없습니다: ${sourceFile}`);
     }
@@ -8236,6 +8237,7 @@ class Inputs {
     sourceLang;
     targetLang;
     fileFormat;
+    filePrefix;
     systemMessage;
     model;
     gitUserName;
@@ -8245,6 +8247,7 @@ class Inputs {
         this.sourceLang = inputs.sourceLang;
         this.targetLang = inputs.targetLang;
         this.fileFormat = inputs.fileFormat;
+        this.filePrefix = inputs.filePrefix;
         this.systemMessage = inputs.systemMessage;
         this.model = inputs.model;
         this.gitUserName = inputs.gitUserName;

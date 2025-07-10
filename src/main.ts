@@ -14,6 +14,7 @@ async function run() {
     sourceLang: getInput('source-lang'),
     targetLang: getInput('target-lang'),
     fileFormat: getInput('file-format'),
+    filePrefix: getInput('file-prefix'),
     model: getInput('model'),
     gitUserName: getInput('git-user-name'),
     gitUserEmail: getInput('git-user-email')
@@ -43,11 +44,11 @@ async function run() {
   // 번역할 파일 읽기
   const sourceFile = path.join(
     inputs.translationsDir,
-    `${inputs.sourceLang}.${fileExtension}`
+    `${inputs.filePrefix}${inputs.sourceLang}.${fileExtension}`
   )
   const targetFile = path.join(
     inputs.translationsDir,
-    `${inputs.targetLang}.${fileExtension}`
+    `${inputs.filePrefix}${inputs.targetLang}.${fileExtension}`
   )
 
   if (!fs.existsSync(sourceFile)) {

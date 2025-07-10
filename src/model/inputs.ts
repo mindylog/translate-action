@@ -3,6 +3,7 @@ export class Inputs {
   sourceLang: string
   targetLang: string
   fileFormat: string
+  filePrefix: string
   systemMessage: string
   model: string
   gitUserName: string
@@ -13,6 +14,7 @@ export class Inputs {
     this.sourceLang = inputs.sourceLang
     this.targetLang = inputs.targetLang
     this.fileFormat = inputs.fileFormat
+    this.filePrefix = inputs.filePrefix
     this.systemMessage = inputs.systemMessage
     this.model = inputs.model
     this.gitUserName = inputs.gitUserName

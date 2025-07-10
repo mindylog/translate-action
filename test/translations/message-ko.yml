@@ -1,0 +1,16 @@
+common:
+  title: '안녕하세요'
+  welcome: '환영합니다'
+  goodbye: '안녕히 가세요'
+
+navigation:
+  home: '홈'
+  about: '소개'
+  contact: '연락처'
+  mypage: '내 정보'
+
+messages:
+  success: '성공했습니다'
+  error: '오류가 발생했습니다'
+  loading: '로딩 중...'
+  warn: '경고'

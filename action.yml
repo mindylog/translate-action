@@ -11,6 +11,11 @@ inputs:
     required: true
     default: 'assets/translations'
 
+  file-prefix:
+    description: 'Prefix for output filename'
+    required: false
+    default: ''
+
   source-lang:
     description: 'Source language code (e.g., ko)'
     required: true
