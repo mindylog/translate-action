@@ -1,0 +1,14 @@
+common:
+  title: Hello
+  welcome: Welcome
+  goodbye: Goodbye
+navigation:
+  home: Home
+  about: About
+  contact: Contact
+  mypage: My Page
+messages:
+  success: Success
+  error: An error occurred
+  loading: Loading...
+  warn: Warning
