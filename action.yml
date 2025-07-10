@@ -20,6 +20,11 @@ inputs:
     description: 'Target language code (e.g., en)'
     required: true
 
+  file-format:
+    description: 'File format to translate (json or yaml)'
+    required: false
+    default: 'json'
+
   system-message:
     description: 'System message for translation'
     required: false

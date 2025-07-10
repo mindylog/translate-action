@@ -2,6 +2,7 @@ export class Inputs {
   translationsDir: string
   sourceLang: string
   targetLang: string
+  fileFormat: string
   systemMessage: string
   model: string
   gitUserName: string
@@ -11,6 +12,7 @@ export class Inputs {
     this.translationsDir = inputs.translationsDir
     this.sourceLang = inputs.sourceLang
     this.targetLang = inputs.targetLang
+    this.fileFormat = inputs.fileFormat
     this.systemMessage = inputs.systemMessage
     this.model = inputs.model
     this.gitUserName = inputs.gitUserName

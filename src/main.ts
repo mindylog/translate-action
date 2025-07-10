@@ -5,6 +5,7 @@ import {Inputs} from './model/inputs'
 import * as fs from 'fs'
 import * as path from 'path'
 import {GitManager} from './utils/git-manager'
+import {getFileParser, getFileExtension} from './utils/file-parser'
 
 async function run() {
   const inputs = new Inputs({
@@ -12,6 +13,7 @@ async function run() {
     systemMessage: getInput('system-message'),
     sourceLang: getInput('source-lang'),
     targetLang: getInput('target-lang'),
+    fileFormat: getInput('file-format'),
     model: getInput('model'),
     gitUserName: getInput('git-user-name'),
     gitUserEmail: getInput('git-user-email')
@@ -34,14 +36,18 @@ async function run() {
 
   await gitManager.initWithCheckout()
 
+  // 파일 형식 설정
+  const fileExtension = getFileExtension(inputs.fileFormat)
+  const fileParser = getFileParser(inputs.fileFormat)
+
   // 번역할 파일 읽기
   const sourceFile = path.join(
     inputs.translationsDir,
-    `${inputs.sourceLang}.json`
+    `${inputs.sourceLang}.${fileExtension}`
   )
   const targetFile = path.join(
     inputs.translationsDir,
-    `${inputs.targetLang}.json`
+    `${inputs.targetLang}.${fileExtension}`
   )
 
   if (!fs.existsSync(sourceFile)) {
@@ -52,21 +58,18 @@ async function run() {
   const sourceContent = fs.readFileSync(sourceFile, 'utf8')
   const targetContent = fs.existsSync(targetFile)
     ? fs.readFileSync(targetFile, 'utf8')
-    : '{}'
+    : fileParser.stringify({})
 
   // 번역 실행
   const translatedContent = await bot.translate(
     sourceContent,
     targetContent,
-    previousSourceContent
+    previousSourceContent,
+    fileParser
   )
 
   // 번역된 내용 저장
-  fs.writeFileSync(
-    targetFile,
-    JSON.stringify(translatedContent, null, 2),
-    'utf8'
-  )
+  fs.writeFileSync(targetFile, fileParser.stringify(translatedContent), 'utf8')
 
   await gitManager.commitAndPush(targetFile, inputs.targetLang)
 }

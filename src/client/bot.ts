@@ -3,6 +3,7 @@ import {OpenAIOptions, Options} from '../model/options'
 import dedent from 'dedent'
 import pRetry from 'p-retry'
 import {info} from '@actions/core'
+import {FileParser} from '../utils/file-parser'
 
 export class Bot {
   private readonly openAI: OpenAI
@@ -86,22 +87,23 @@ export class Bot {
   }
 
   async translate(
-    sourceJson: string,
-    targetJson: string,
-    previousSourceJson: string | null
+    sourceContent: string,
+    targetContent: string,
+    previousSourceContent: string | null,
+    fileParser: FileParser
   ): Promise<Record<string, any>> {
-    const parsedSourceJson = JSON.parse(sourceJson)
-    let parsedTargetJson = JSON.parse(targetJson)
+    const parsedSourceJson = fileParser.parse(sourceContent)
+    let parsedTargetJson = fileParser.parse(targetContent)
 
     return pRetry(
       async () => {
         const flattenedSource = this.flattenJson(parsedSourceJson)
         const flattenedTarget = this.flattenJson(parsedTargetJson)
 
-        // sourceJson과 previousSourceJson 비교하여 변경된 키 찾기
+        // sourceContent와 previousSourceContent 비교하여 변경된 키 찾기
         let changedKeys: Set<string> = new Set()
-        if (previousSourceJson) {
-          const parsedPreviousSource = JSON.parse(previousSourceJson)
+        if (previousSourceContent) {
+          const parsedPreviousSource = fileParser.parse(previousSourceContent)
           const flattenedPreviousSource = this.flattenJson(parsedPreviousSource)
 
           changedKeys = new Set(
