@@ -1,5 +1,5 @@
 name: 'Translate Action'
-description: 'Translates JSON files using OpenAI'
+description: 'Translates JSON/YAML files using OpenAI'
 branding:
   icon: 'translate-action'
   color: 'blue'
@@ -7,7 +7,7 @@ author: 'Mindy Team'
 
 inputs:
   translations-dir:
-    description: 'Directory containing translation JSON files'
+    description: 'Directory containing translation JSON/YAML files'
     required: true
     default: 'assets/translations'
 

@@ -1,7 +1,6 @@
 # Translate Action
 
-마인디 앱의 번역을 책임지는 액션입니다. 기본적으로 flutter easy_localization 의
-번역 파일을 번역하도록 설계되어 있으므로 범용적인 구조가 아닐 수 있습니다.
+마인디 앱/서버의 번역을 책임지는 액션입니다. 기본적으로 flutter easy_localization의 JSON과 Spring Boot의 resource yaml 파일을 번역하도록 설계되어 있으므로 범용적인 구조가 아닐 수 있습니다.
 
 ## 기능
 
@@ -43,6 +42,7 @@ jobs:
           source-lang: 'ko'
           target-lang: 'en'
           file-format: 'json'
+          file-prefix: ''
           model: 'gpt-4o'
           git-user-name: 'github-actions[bot]'
           git-user-email: 'github-actions[bot]@users.noreply.github.com'
@@ -84,6 +84,7 @@ jobs:
           source-lang: 'ko'
           target-lang: ${{ matrix.locale }}
           file-format: 'json'
+          file-prefix: ''
           model: 'gpt-4o'
           git-user-name: 'github-actions[bot]'
           git-user-email: 'github-actions[bot]@users.noreply.github.com'
@@ -96,6 +97,7 @@ jobs:
 | 파라미터         | 필수 | 설명                             | 기본값 |
 | ---------------- | ---- | -------------------------------- | ------ |
 | translations-dir | ✅   | 번역 파일이 위치한 디렉토리 경로 | -      |
+| file-prefix      | ❌   | 출력 파일명의 접두사             | ''     |
 | source-lang      | ✅   | 소스 언어 코드 (예: ko, en, ja)  | -      |
 | target-lang      | ✅   | 타겟 언어 코드 (예: ko, en, ja)  | -      |
 | file-format      | ❌   | 파일 형식 (json 또는 yaml)       | json   |
@@ -134,8 +136,10 @@ jobs:
 3. **파일 구조**
 
    - 번역 파일은 JSON 또는 YAML 형식을 지원합니다.
-   - 파일명은 언어 코드와 확장자를 사용해야 합니다 (예: ko.json, en.json 또는 ko.yml, en.yml).
+   - 파일명은 `{file-prefix}{language-code}.{extension}` 형식을 사용합니다.
+   - 예시: `ko.json`, `en.json` 또는 `message-ko.yml`, `message-en.yml`
    - `file-format` 파라미터로 원하는 형식을 지정할 수 있습니다.
+   - `file-prefix` 파라미터로 파일명 접두사를 지정할 수 있습니다.
 
 4. **API 키 보안**
    - OpenAI API 키는 반드시 GitHub Secrets에 저장하여 사용하세요.
@@ -188,5 +192,42 @@ YAML 형식을 사용하려면 `file-format: 'yaml'` 파라미터를 추가하�
     source-lang: 'ko'
     target-lang: 'en'
     file-format: 'yaml'
+    file-prefix: 'message-'
     # ... 기타 설정
+```
+
+### 파일 접두사 사용 예제
+
+파일 접두사를 사용하여 여러 종류의 번역 파일을 관리할 수 있습니다:
+
+```yaml
+# 기본 번역 파일 (ko.json, en.json)
+- name: Translate common messages
+  uses: mindylog/translate-action@main
+  with:
+    translations-dir: 'assets/translations'
+    source-lang: 'ko'
+    target-lang: 'en'
+    file-format: 'json'
+    file-prefix: ''
+
+# 에러 메시지 번역 파일 (error-ko.json, error-en.json)
+- name: Translate error messages
+  uses: mindylog/translate-action@main
+  with:
+    translations-dir: 'assets/translations'
+    source-lang: 'ko'
+    target-lang: 'en'
+    file-format: 'json'
+    file-prefix: 'error-'
+
+# 성공 메시지 번역 파일 (success-ko.yml, success-en.yml)
+- name: Translate success messages
+  uses: mindylog/translate-action@main
+  with:
+    translations-dir: 'assets/translations'
+    source-lang: 'ko'
+    target-lang: 'en'
+    file-format: 'yaml'
+    file-prefix: 'success-'
 ```
