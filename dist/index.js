@@ -8167,6 +8167,7 @@ __nccwpck_require__.r(__webpack_exports__);
 
 
 async function run() {
+    const sourceBranch = process.env.GITHUB_HEAD_REF;
     const inputs = new _model_inputs__WEBPACK_IMPORTED_MODULE_6__/* .Inputs */ .G({
         translationsDir: (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('translations-dir'),
         systemMessage: (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('system-message'),
@@ -8200,7 +8201,7 @@ async function run() {
     if (!fs__WEBPACK_IMPORTED_MODULE_2__.existsSync(sourceFile)) {
         throw new Error(`소스 파일을 찾을 수 없습니다: ${sourceFile}`);
     }
-    const previousSourceContent = await gitManager.getPreviousFileContent(sourceFile);
+    const previousSourceContent = await gitManager.getPreviousFileContent(sourceFile, sourceBranch);
     const sourceContent = fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync(sourceFile, 'utf8');
     const targetContent = fs__WEBPACK_IMPORTED_MODULE_2__.existsSync(targetFile)
         ? fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync(targetFile, 'utf8')
@@ -12215,6 +12216,9 @@ function getFileExtension(format) {
 /* harmony import */ var _actions_exec__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_exec__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(9999);
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(6928);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(path__WEBPACK_IMPORTED_MODULE_2__);
+
 
 
 class GitManager {
@@ -12267,20 +12271,73 @@ class GitManager {
             throw new Error(`브랜치 푸시 중 오류 발생: ${error}`);
         }
     }
-    async getPreviousFileContent(filePath) {
+    async getPreviousFileContent(filePath, sourceBranch) {
         try {
-            // HEAD^ 는 현재 커밋의 이전 커밋을 의미합니다
+            const normalizedPath = await this.toRepositoryRelativePath(filePath);
+            const diffBaseRef = await this.getDiffBaseRef(sourceBranch);
             const result = await this.execWithOutput('git', [
                 'show',
-                `HEAD~:${filePath}`
+                `${diffBaseRef}:${normalizedPath}`
             ]);
             return result.stdout;
         }
         catch (error) {
-            // 파일이 이전에 존재하지 않았거나 첫 커밋인 경우
             (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.warning)(`이전 파일 내용을 가져올 수 없습니다: ${error}`);
             return null;
         }
+    }
+    async getDiffBaseRef(sourceBranch) {
+        const baseBranch = process.env.GITHUB_BASE_REF;
+        const resolvedSourceBranch = sourceBranch ?? process.env.GITHUB_HEAD_REF;
+        if (!baseBranch) {
+            return 'HEAD~';
+        }
+        try {
+            await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin', baseBranch]);
+            let sourceRef = 'HEAD';
+            if (resolvedSourceBranch) {
+                try {
+                    await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', [
+                        'rev-parse',
+                        '--verify',
+                        `origin/${resolvedSourceBranch}`
+                    ]);
+                    sourceRef = `origin/${resolvedSourceBranch}`;
+                }
+                catch {
+                    sourceRef = 'HEAD';
+                }
+            }
+            const mergeBaseResult = await this.execWithOutput('git', [
+                'merge-base',
+                sourceRef,
+                `origin/${baseBranch}`
+            ]);
+            const mergeBaseSha = mergeBaseResult.stdout.trim();
+            if (mergeBaseSha) {
+                return mergeBaseSha;
+            }
+            return `origin/${baseBranch}`;
+        }
+        catch (error) {
+            (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.warning)(`PR diff 기준점을 계산할 수 없어 직전 커밋으로 폴백합니다: ${error}`);
+            return 'HEAD~';
+        }
+    }
+    async toRepositoryRelativePath(filePath) {
+        const repoRootResult = await this.execWithOutput('git', [
+            'rev-parse',
+            '--show-toplevel'
+        ]);
+        const repoRoot = repoRootResult.stdout.trim();
+        const absolutePath = path__WEBPACK_IMPORTED_MODULE_2__.isAbsolute(filePath)
+            ? filePath
+            : path__WEBPACK_IMPORTED_MODULE_2__.resolve(process.cwd(), filePath);
+        const relativePath = path__WEBPACK_IMPORTED_MODULE_2__.relative(repoRoot, absolutePath);
+        if (relativePath.startsWith('..') || path__WEBPACK_IMPORTED_MODULE_2__.isAbsolute(relativePath)) {
+            throw new Error(`저장소 외부 경로는 지원하지 않습니다: ${filePath}`);
+        }
+        return relativePath.split(path__WEBPACK_IMPORTED_MODULE_2__.sep).join('/');
     }
     async execWithOutput(command, args) {
         let stdout = '';

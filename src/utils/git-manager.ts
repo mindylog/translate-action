@@ -1,5 +1,6 @@
 import {exec} from '@actions/exec'
 import {warning} from '@actions/core'
+import * as path from 'path'
 
 export class GitManager {
   constructor(
@@ -58,19 +59,84 @@ export class GitManager {
     }
   }
 
-  async getPreviousFileContent(filePath: string): Promise<string | null> {
+  async getPreviousFileContent(
+    filePath: string,
+    sourceBranch?: string
+  ): Promise<string | null> {
     try {
-      // HEAD^ 는 현재 커밋의 이전 커밋을 의미합니다
+      const normalizedPath = await this.toRepositoryRelativePath(filePath)
+      const diffBaseRef = await this.getDiffBaseRef(sourceBranch)
       const result = await this.execWithOutput('git', [
         'show',
-        `HEAD~:${filePath}`
+        `${diffBaseRef}:${normalizedPath}`
       ])
       return result.stdout
     } catch (error) {
-      // 파일이 이전에 존재하지 않았거나 첫 커밋인 경우
       warning(`이전 파일 내용을 가져올 수 없습니다: ${error}`)
       return null
     }
+  }
+
+  private async getDiffBaseRef(sourceBranch?: string): Promise<string> {
+    const baseBranch = process.env.GITHUB_BASE_REF
+    const resolvedSourceBranch = sourceBranch ?? process.env.GITHUB_HEAD_REF
+
+    if (!baseBranch) {
+      return 'HEAD~'
+    }
+
+    try {
+      await exec('git', ['fetch', 'origin', baseBranch])
+
+      let sourceRef = 'HEAD'
+      if (resolvedSourceBranch) {
+        try {
+          await exec('git', [
+            'rev-parse',
+            '--verify',
+            `origin/${resolvedSourceBranch}`
+          ])
+          sourceRef = `origin/${resolvedSourceBranch}`
+        } catch {
+          sourceRef = 'HEAD'
+        }
+      }
+
+      const mergeBaseResult = await this.execWithOutput('git', [
+        'merge-base',
+        sourceRef,
+        `origin/${baseBranch}`
+      ])
+      const mergeBaseSha = mergeBaseResult.stdout.trim()
+
+      if (mergeBaseSha) {
+        return mergeBaseSha
+      }
+
+      return `origin/${baseBranch}`
+    } catch (error) {
+      warning(
+        `PR diff 기준점을 계산할 수 없어 직전 커밋으로 폴백합니다: ${error}`
+      )
+      return 'HEAD~'
+    }
+  }
+
+  private async toRepositoryRelativePath(filePath: string): Promise<string> {
+    const repoRootResult = await this.execWithOutput('git', [
+      'rev-parse',
+      '--show-toplevel'
+    ])
+    const repoRoot = repoRootResult.stdout.trim()
+    const absolutePath = path.isAbsolute(filePath)
+      ? filePath
+      : path.resolve(process.cwd(), filePath)
+    const relativePath = path.relative(repoRoot, absolutePath)
+    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+      throw new Error(`저장소 외부 경로는 지원하지 않습니다: ${filePath}`)
+    }
+
+    return relativePath.split(path.sep).join('/')
   }
 
   private async execWithOutput(

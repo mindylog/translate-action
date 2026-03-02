@@ -8,6 +8,8 @@ import {GitManager} from './utils/git-manager'
 import {getFileParser, getFileExtension} from './utils/file-parser'
 
 async function run() {
+  const sourceBranch = process.env.GITHUB_HEAD_REF
+
   const inputs = new Inputs({
     translationsDir: getInput('translations-dir'),
     systemMessage: getInput('system-message'),
@@ -54,8 +56,10 @@ async function run() {
   if (!fs.existsSync(sourceFile)) {
     throw new Error(`소스 파일을 찾을 수 없습니다: ${sourceFile}`)
   }
-  const previousSourceContent =
-    await gitManager.getPreviousFileContent(sourceFile)
+  const previousSourceContent = await gitManager.getPreviousFileContent(
+    sourceFile,
+    sourceBranch
+  )
   const sourceContent = fs.readFileSync(sourceFile, 'utf8')
   const targetContent = fs.existsSync(targetFile)
     ? fs.readFileSync(targetFile, 'utf8')
