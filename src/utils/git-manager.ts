@@ -24,7 +24,10 @@ export class GitManager {
         throw new Error('PR의 소스 브랜치를 찾을 수 없습니다')
       }
 
-      await this.commitChanges(targetFile, targetLang)
+      const committed = await this.commitChanges(targetFile, targetLang)
+      if (!committed) {
+        return
+      }
       await this.pushToSourceBranch(sourceBranch)
     } catch (error) {
       warning(`Git 커밋 중 오류 발생: ${error}`)
@@ -44,9 +47,14 @@ export class GitManager {
   private async commitChanges(
     targetFile: string,
     targetLang: string
-  ): Promise<void> {
+  ): Promise<boolean> {
     await exec('git', ['add', targetFile])
+    const hasStagedChanges = await this.hasStagedChanges()
+    if (!hasStagedChanges) {
+      return false
+    }
     await exec('git', ['commit', '-m', `[자동] ${targetLang} 번역 업데이트`])
+    return true
   }
 
   private async pushToSourceBranch(sourceBranch: string): Promise<void> {
@@ -82,14 +90,22 @@ export class GitManager {
     const resolvedSourceBranch = sourceBranch ?? process.env.GITHUB_HEAD_REF
 
     if (!baseBranch) {
-      return 'HEAD~'
+      return this.getLocalFallbackRef()
     }
+
+    const baseRef = `origin/${baseBranch}`
 
     try {
       await exec('git', ['fetch', 'origin', baseBranch])
 
       let sourceRef = 'HEAD'
       if (resolvedSourceBranch) {
+        try {
+          await exec('git', ['fetch', 'origin', resolvedSourceBranch])
+        } catch {
+          // 이미 checkout 되어 있거나 fetch 제한이 있을 수 있으므로 조용히 진행
+        }
+
         try {
           await exec('git', [
             'rev-parse',
@@ -105,7 +121,7 @@ export class GitManager {
       const mergeBaseResult = await this.execWithOutput('git', [
         'merge-base',
         sourceRef,
-        `origin/${baseBranch}`
+        baseRef
       ])
       const mergeBaseSha = mergeBaseResult.stdout.trim()
 
@@ -113,13 +129,42 @@ export class GitManager {
         return mergeBaseSha
       }
 
-      return `origin/${baseBranch}`
+      return baseRef
     } catch (error) {
       warning(
-        `PR diff 기준점을 계산할 수 없어 직전 커밋으로 폴백합니다: ${error}`
+        `PR diff 기준점을 계산할 수 없어 base 브랜치 기준으로 폴백합니다: ${error}`
       )
+
+      if (await this.canResolveRef(baseRef)) {
+        return baseRef
+      }
+
+      return this.getLocalFallbackRef()
+    }
+  }
+
+  private async getLocalFallbackRef(): Promise<string> {
+    if (await this.canResolveRef('HEAD~')) {
       return 'HEAD~'
     }
+    if (await this.canResolveRef('HEAD^')) {
+      return 'HEAD^'
+    }
+    return 'HEAD'
+  }
+
+  private async canResolveRef(ref: string): Promise<boolean> {
+    const exitCode = await exec('git', ['rev-parse', '--verify', ref], {
+      ignoreReturnCode: true
+    })
+    return exitCode === 0
+  }
+
+  private async hasStagedChanges(): Promise<boolean> {
+    const exitCode = await exec('git', ['diff', '--cached', '--quiet'], {
+      ignoreReturnCode: true
+    })
+    return exitCode === 1
   }
 
   private async toRepositoryRelativePath(filePath: string): Promise<string> {

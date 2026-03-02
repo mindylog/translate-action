@@ -12242,7 +12242,10 @@ class GitManager {
             if (!sourceBranch) {
                 throw new Error('PR의 소스 브랜치를 찾을 수 없습니다');
             }
-            await this.commitChanges(targetFile, targetLang);
+            const committed = await this.commitChanges(targetFile, targetLang);
+            if (!committed) {
+                return;
+            }
             await this.pushToSourceBranch(sourceBranch);
         }
         catch (error) {
@@ -12259,7 +12262,12 @@ class GitManager {
     }
     async commitChanges(targetFile, targetLang) {
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['add', targetFile]);
+        const hasStagedChanges = await this.hasStagedChanges();
+        if (!hasStagedChanges) {
+            return false;
+        }
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['commit', '-m', `[자동] ${targetLang} 번역 업데이트`]);
+        return true;
     }
     async pushToSourceBranch(sourceBranch) {
         try {
@@ -12290,12 +12298,19 @@ class GitManager {
         const baseBranch = process.env.GITHUB_BASE_REF;
         const resolvedSourceBranch = sourceBranch ?? process.env.GITHUB_HEAD_REF;
         if (!baseBranch) {
-            return 'HEAD~';
+            return this.getLocalFallbackRef();
         }
+        const baseRef = `origin/${baseBranch}`;
         try {
             await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin', baseBranch]);
             let sourceRef = 'HEAD';
             if (resolvedSourceBranch) {
+                try {
+                    await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['fetch', 'origin', resolvedSourceBranch]);
+                }
+                catch {
+                    // 이미 checkout 되어 있거나 fetch 제한이 있을 수 있으므로 조용히 진행
+                }
                 try {
                     await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', [
                         'rev-parse',
@@ -12311,18 +12326,42 @@ class GitManager {
             const mergeBaseResult = await this.execWithOutput('git', [
                 'merge-base',
                 sourceRef,
-                `origin/${baseBranch}`
+                baseRef
             ]);
             const mergeBaseSha = mergeBaseResult.stdout.trim();
             if (mergeBaseSha) {
                 return mergeBaseSha;
             }
-            return `origin/${baseBranch}`;
+            return baseRef;
         }
         catch (error) {
-            (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.warning)(`PR diff 기준점을 계산할 수 없어 직전 커밋으로 폴백합니다: ${error}`);
+            (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.warning)(`PR diff 기준점을 계산할 수 없어 base 브랜치 기준으로 폴백합니다: ${error}`);
+            if (await this.canResolveRef(baseRef)) {
+                return baseRef;
+            }
+            return this.getLocalFallbackRef();
+        }
+    }
+    async getLocalFallbackRef() {
+        if (await this.canResolveRef('HEAD~')) {
             return 'HEAD~';
         }
+        if (await this.canResolveRef('HEAD^')) {
+            return 'HEAD^';
+        }
+        return 'HEAD';
+    }
+    async canResolveRef(ref) {
+        const exitCode = await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['rev-parse', '--verify', ref], {
+            ignoreReturnCode: true
+        });
+        return exitCode === 0;
+    }
+    async hasStagedChanges() {
+        const exitCode = await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_0__.exec)('git', ['diff', '--cached', '--quiet'], {
+            ignoreReturnCode: true
+        });
+        return exitCode === 1;
     }
     async toRepositoryRelativePath(filePath) {
         const repoRootResult = await this.execWithOutput('git', [
